@@ -1,47 +1,90 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Library, PlusCircle, Settings } from 'lucide-react';
+import { Library, Plus, Settings, Star, Search } from 'lucide-react';
 
 export function Layout() {
-  const navItems = [
-    { to: '/', icon: Library, label: 'Collection' },
-    { to: '/add', icon: PlusCircle, label: 'Add New' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
-  ];
-
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-dark-900 to-dark-800">
-      {/* Sidebar */}
-      <aside className="w-64 bg-dark-800 border-r border-dark-700">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Library className="w-8 h-8" />
-            Collection
-          </h1>
-        </div>
-        <nav className="mt-6">
-          {navItems.map(({ to, icon: Icon, label }) => (
+    <div className="min-h-screen bg-dark-900 flex">
+      <nav className="fixed left-0 top-0 bottom-0 w-16 md:w-64 bg-dark-800 border-r border-dark-700">
+        <div className="flex flex-col h-full p-4">
+          <div className="flex-1 space-y-2">
             <NavLink
-              key={to}
-              to={to}
+              to="/"
               className={({ isActive }) =>
-                `flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors ${
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-dark-700 text-white border-r-4 border-indigo-500'
-                    : 'text-dark-300 hover:text-white hover:bg-dark-700'
+                    ? 'text-white bg-dark-700'
+                    : 'text-dark-300 hover:text-white hover:bg-dark-700/50'
                 }`
               }
             >
-              <Icon className="w-5 h-5" />
-              {label}
+              <Library className="w-5 h-5" />
+              <span className="hidden md:inline">Collection</span>
             </NavLink>
-          ))}
-        </nav>
-      </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-7xl mx-auto px-8 py-8">
+            <NavLink
+              to="/shelf"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'text-white bg-dark-700'
+                    : 'text-dark-300 hover:text-white hover:bg-dark-700/50'
+                }`
+              }
+            >
+              <Star className="w-5 h-5" />
+              <span className="hidden md:inline">Shelf</span>
+            </NavLink>
+
+            <NavLink
+              to="/wanted"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'text-white bg-dark-700'
+                    : 'text-dark-300 hover:text-white hover:bg-dark-700/50'
+                }`
+              }
+            >
+              <Search className="w-5 h-5" />
+              <span className="hidden md:inline">Wanted</span>
+            </NavLink>
+          </div>
+
+          <div className="space-y-2">
+            <NavLink
+              to="/add"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'text-white bg-dark-700'
+                    : 'text-dark-300 hover:text-white hover:bg-dark-700/50'
+                }`
+              }
+            >
+              <Plus className="w-5 h-5" />
+              <span className="hidden md:inline">Add New</span>
+            </NavLink>
+
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'text-white bg-dark-700'
+                    : 'text-dark-300 hover:text-white hover:bg-dark-700/50'
+                }`
+              }
+            >
+              <Settings className="w-5 h-5" />
+              <span className="hidden md:inline">Settings</span>
+            </NavLink>
+          </div>
+        </div>
+      </nav>
+
+      <main className="flex-1 ml-16 md:ml-64">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <Outlet />
         </div>
       </main>

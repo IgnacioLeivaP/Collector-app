@@ -55,7 +55,7 @@ export function CategoryManager({ categories, onCategoryAdded }: CategoryManager
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               placeholder="Enter new category"
-              className="flex-1 rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              className="flex-1 rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-4 py-2"
               autoFocus
             />
             <button

@@ -1,45 +1,41 @@
 import React from 'react';
-import { Tag } from 'lucide-react';
+import { useItems } from '../hooks/useItems';
 
 interface CategoryFilterProps {
-  categories: string[];
   selectedCategory: string | null;
-  onSelectCategory: (category: string | null) => void;
+  onCategoryChange: (category: string | null) => void;
 }
 
-export function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
+export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
+  const { items } = useItems();
+  
+  // Obtener categorías únicas de los items
+  const categories = Array.from(new Set(items.map(item => item.category)))
+    .filter(Boolean) // Eliminar categorías vacías
+    .sort();
+
   return (
-    <div className="mb-8 bg-dark-800 p-6 rounded-xl border border-dark-700">
-      <div className="flex items-center gap-3 mb-4">
-        <Tag className="w-5 h-5 text-indigo-400" />
-        <h3 className="text-lg font-semibold text-white">Filter by Category</h3>
-      </div>
-      
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => onSelectCategory(null)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            selectedCategory === null
-              ? 'bg-indigo-600 text-white'
-              : 'bg-dark-700 text-dark-300 hover:text-white'
-          }`}
-        >
-          All Items
-        </button>
-        
+    <div className="relative">
+      <select
+        value={selectedCategory || ''}
+        onChange={(e) => onCategoryChange(e.target.value || null)}
+        className="appearance-none rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2 pr-8"
+      >
+        <option value="">All Categories</option>
         {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => onSelectCategory(category)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedCategory === category
-                ? 'bg-indigo-600 text-white'
-                : 'bg-dark-700 text-dark-300 hover:text-white'
-            }`}
-          >
-            {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
-          </button>
+          <option key={category} value={category}>
+            {category}
+          </option>
         ))}
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-dark-300">
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
       </div>
     </div>
   );

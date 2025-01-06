@@ -1,43 +1,102 @@
 import React, { useState } from 'react';
-import { CollectionGrid } from '../components/CollectionGrid';
-import { CategoryFilter } from '../components/CategoryFilter';
 import { useItems } from '../hooks/useItems';
-import { useCategories } from '../hooks/useCategories';
+import { CategoryFilter } from '../components/CategoryFilter';
+import { SortOptions } from '../components/SortOptions';
+import { CollectionGrid } from '../components/CollectionGrid';
+import { EditItemModal } from '../components/EditItemModal';
+import { CollectionItem } from '../types/collection';
 
 export function CollectionPage() {
-  const { items, loadItems } = useItems();
+  const { items, loading, error, loadItems } = useItems();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const categoriesWithItems = useCategories(items);
+  const [currentSort, setCurrentSort] = useState('name-asc');
+  const [editingItem, setEditingItem] = useState<CollectionItem | null>(null);
 
+  // Filtrar items que no son wanted
+  const collectionItems = items.filter(item => !item.isWanted);
+  
   const filteredItems = selectedCategory
-    ? items.filter(item => item.category === selectedCategory)
-    : items;
+    ? collectionItems.filter(item => item.category === selectedCategory)
+    : collectionItems;
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    switch (currentSort) {
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'value-asc':
+        return a.value - b.value;
+      case 'value-desc':
+        return b.value - a.value;
+      default:
+        return 0;
+    }
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-dark-300">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-dark-800 p-8 rounded-xl border border-dark-700 text-center">
+        <p className="text-red-400 mb-2">Error loading collection</p>
+        <button
+          onClick={loadItems}
+          className="text-indigo-400 hover:text-indigo-300 transition-colors"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-2xl font-bold text-white">My Collection</h2>
-        <p className="text-dark-300">
-          {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
-        </p>
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Collection</h2>
+        <div className="flex gap-4">
+          <CategoryFilter
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+          <SortOptions
+            currentSort={currentSort}
+            onSortChange={setCurrentSort}
+          />
+        </div>
       </div>
 
-      {categoriesWithItems.length > 0 ? (
-        <>
-          <CategoryFilter
-            categories={categoriesWithItems}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-          <CollectionGrid items={filteredItems} onItemDeleted={loadItems} />
-        </>
-      ) : (
+      {sortedItems.length === 0 ? (
         <div className="bg-dark-800 p-8 rounded-xl border border-dark-700 text-center">
-          <p className="text-dark-300 mb-2">Your collection is empty</p>
+          <p className="text-dark-300 mb-2">No items found</p>
           <p className="text-dark-400 text-sm">
-            Add some items to start organizing your collection
+            Add items to your collection to see them here
           </p>
         </div>
+      ) : (
+        <CollectionGrid
+          items={sortedItems}
+          onItemDeleted={loadItems}
+          onEditItem={setEditingItem}
+          onShelfToggle={loadItems}
+        />
+      )}
+
+      {editingItem && (
+        <EditItemModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={() => {
+            loadItems();
+            setEditingItem(null);
+          }}
+        />
       )}
     </div>
   );

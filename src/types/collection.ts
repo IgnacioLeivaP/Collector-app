@@ -3,10 +3,17 @@ export type ItemCategory = string;
 export interface CollectionItem {
   id: string;
   name: string;
-  category: ItemCategory;
+  category: string;
   description: string;
   condition: string;
-  acquisitionDate: string;
   value: number;
-  imageUrl?: string;
+  imageUrl: string;
+  acquisitionDate: string;
+  isShelfItem?: boolean;
+  has: string[];
+  missing: string[];
+  releaseDate?: string;
+  color?: string;
+  variant?: string;
+  isWanted?: boolean;
 }
