@@ -7,6 +7,10 @@ export function Layout() {
     <div className="min-h-screen bg-dark-900 flex">
       <nav className="fixed left-0 top-0 bottom-0 w-16 md:w-64 bg-dark-800 border-r border-dark-700">
         <div className="flex flex-col h-full p-4">
+          <div className="mb-6 px-3">
+            <span className="hidden md:block text-white font-bold text-lg tracking-tight">Dust Collector</span>
+            <span className="md:hidden block text-white font-bold text-lg">DC</span>
+          </div>
           <div className="flex-1 space-y-2">
             <NavLink
               to="/"
