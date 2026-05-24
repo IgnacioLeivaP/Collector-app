@@ -1,2 +1,2 @@
-name = "collector-app"
+name = "dustcollector"
 pages_build_output_dir = "dist"
