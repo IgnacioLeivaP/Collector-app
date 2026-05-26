@@ -1,22 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { AddItemForm } from '../components/AddItemForm';
 import { CategoryList } from '../components/CategoryList';
-import { loadCategories, saveCategory } from '../utils/storage';
+import { useCategoriesContext } from '../contexts/CategoriesContext';
 
 export function AddItemPage() {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<string[]>([]);
-
-  useEffect(() => {
-    const savedCategories = loadCategories();
-    setCategories(savedCategories);
-  }, []);
+  const { categories, addCategory } = useCategoriesContext();
 
   const handleCategoryAdded = (newCategory: string) => {
-    const updatedCategories = saveCategory(newCategory);
-    setCategories(updatedCategories);
+    addCategory(newCategory);
   };
 
   const handleItemAdded = () => {

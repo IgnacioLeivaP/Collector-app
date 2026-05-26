@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, ExternalLink } from 'lucide-react';
+import { Trash2, Edit, ExternalLink, Heart } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
-import { deleteItem } from '../utils/storage';
 import { useNavigate } from 'react-router-dom';
 
 interface WantedListProps {
   items: CollectionItem[];
-  onItemDeleted: () => void;
+  onDeleteItem: (id: string) => void;
   onEditItem: (item: CollectionItem) => void;
+  onToggleWanted: (id: string) => void;
 }
 
-export function WantedList({ items, onItemDeleted, onEditItem }: WantedListProps) {
+export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps) {
   const navigate = useNavigate();
   const [itemToDelete, setItemToDelete] = useState<CollectionItem | null>(null);
 
   const handleDelete = (id: string) => {
-    deleteItem(id);
-    onItemDeleted();
+    onDeleteItem(id);
     setItemToDelete(null);
   };
 
@@ -65,13 +64,23 @@ export function WantedList({ items, onItemDeleted, onEditItem }: WantedListProps
                       onClick={() => onEditItem(item)}
                       className="p-2 rounded-lg text-dark-300 hover:text-white transition-colors"
                       title="Edit Item"
+                      type="button"
                     >
                       <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onToggleWanted(item.id)}
+                      className="p-2 rounded-lg text-dark-300 hover:text-pink-400 transition-colors"
+                      title="Move to Collection"
+                      type="button"
+                    >
+                      <Heart className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setItemToDelete(item)}
                       className="p-2 rounded-lg text-dark-300 hover:text-red-400 transition-colors"
                       title="Delete Item"
+                      type="button"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>

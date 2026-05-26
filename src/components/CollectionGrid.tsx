@@ -1,33 +1,29 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, Star, MoreVertical } from 'lucide-react';
+import { Trash2, Edit, Star, MoreVertical, Heart } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
-import { deleteItem, toggleShelfItem } from '../utils/storage';
 import { useNavigate } from 'react-router-dom';
 
 interface CollectionGridProps {
   items: CollectionItem[];
-  onItemDeleted: () => void;
+  onDeleteItem: (id: string) => void;
   onEditItem: (item: CollectionItem) => void;
-  onShelfToggle: () => void;
+  onToggleShelf: (id: string) => void;
+  onToggleWanted: (id: string) => void;
 }
 
-export function CollectionGrid({ items, onItemDeleted, onEditItem, onShelfToggle }: CollectionGridProps) {
+export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf }: CollectionGridProps) {
   const navigate = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<CollectionItem | null>(null);
 
   const handleDelete = (id: string) => {
-    deleteItem(id);
-    onItemDeleted();
+    onDeleteItem(id);
     setItemToDelete(null);
   };
 
   const handleShelfToggle = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const success = toggleShelfItem(id);
-    if (success) {
-      onShelfToggle();
-    }
+    onToggleShelf(id);
   };
 
   const handleMenuClick = (e: React.MouseEvent, itemId: string) => {
@@ -69,8 +65,20 @@ export function CollectionGrid({ items, onItemDeleted, onEditItem, onShelfToggle
                       item.isShelfItem ? 'text-yellow-400' : ''
                     }`}
                     title={item.isShelfItem ? "Remove from Shelf" : "Add to Shelf"}
+                    type="button"
                   >
                     <Star className="w-5 h-5" fill={item.isShelfItem ? "currentColor" : "none"} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleWanted(item.id);
+                    }}
+                    className="text-dark-300 hover:text-pink-400 transition-colors"
+                    title="Move to Wanted"
+                    type="button"
+                  >
+                    <Heart className="w-5 h-5" />
                   </button>
                   <div className="relative">
                     <button

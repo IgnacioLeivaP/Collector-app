@@ -62,11 +62,17 @@ Este comando hace build y despliega directamente a Cloudflare Pages.
 ```
 src/
 ├── components/    # Componentes React reutilizables
+├── contexts/      # Context providers para estado compartido
 ├── hooks/         # Custom hooks
 ├── pages/         # Páginas de la aplicación
 ├── types/         # Tipos TypeScript
 └── utils/         # Utilidades
 ```
+
+## Cambios recientes
+
+- Se agregó `src/contexts/ItemsContext.tsx` para centralizar el estado de items y sincronizar la colección con `localStorage`.
+- `useItems` ahora reexporta el hook de contexto, lo que evita múltiples accesos independientes a storage.
 
 ## Stack tecnológico
 

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
-import { saveItem } from '../utils/storage';
+import { useItems } from '../hooks/useItems';
+import { useCategoriesContext } from '../contexts/CategoriesContext';
+import { conditionOptions } from '../constants/conditionOptions';
 
 interface EditItemModalProps {
   item: CollectionItem;
@@ -10,6 +12,8 @@ interface EditItemModalProps {
 }
 
 export function EditItemModal({ item, onClose, onSave }: EditItemModalProps) {
+  const { updateItem } = useItems();
+  const { categories } = useCategoriesContext();
   const [formData, setFormData] = useState({
     ...item,
     has: item.has || [],
@@ -20,7 +24,7 @@ export function EditItemModal({ item, onClose, onSave }: EditItemModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    saveItem(formData);
+    updateItem(formData);
     onSave();
   };
 
@@ -88,7 +92,7 @@ export function EditItemModal({ item, onClose, onSave }: EditItemModalProps) {
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             >
-              {allCategories.map((category) => (
+              {categories.map((category) => (
                 <option key={category} value={category}>
                   {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
                 </option>
@@ -111,9 +115,42 @@ export function EditItemModal({ item, onClose, onSave }: EditItemModalProps) {
             <input
               type="text"
               className="mt-1 block w-full rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2"
+              placeholder="Use a reference or write a custom condition"
               value={formData.condition}
               onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
             />
+            <div className="mt-4 rounded-2xl border border-dark-700 bg-dark-900 p-4">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-white">Condition reference</p>
+                  <p className="text-sm text-dark-300">Choose a preset or keep your own description.</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-dark-700">
+                <table className="min-w-full text-left text-sm text-dark-100">
+                  <thead className="bg-dark-800 text-dark-300">
+                    <tr>
+                      <th className="px-3 py-2">Reference</th>
+                      <th className="px-3 py-2">Meaning</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conditionOptions.map((option) => (
+                      <tr
+                        key={option.id}
+                        onClick={() => setFormData({ ...formData, condition: option.label })}
+                        className={`cursor-pointer border-t border-dark-700 transition-colors hover:bg-dark-800 ${
+                          formData.condition === option.label ? 'bg-indigo-500/10' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-3 font-medium text-white">{option.label}</td>
+                        <td className="px-3 py-3 text-dark-200">{option.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <div>

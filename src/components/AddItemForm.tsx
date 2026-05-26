@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { PlusCircle, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
-import { saveItem, saveCategory, loadCategories } from '../utils/storage';
+import { useItems } from '../hooks/useItems';
+import { useNotifications } from '../contexts/NotificationsContext';
+import { conditionOptions } from '../constants/conditionOptions';
 
 interface AddItemFormProps {
   onItemAdded: () => void;
@@ -11,6 +13,8 @@ interface AddItemFormProps {
 type AddToOption = 'collection' | 'wanted';
 
 export function AddItemForm({ onItemAdded, categories }: AddItemFormProps) {
+  const { addItem } = useItems();
+  const { notify } = useNotifications();
   const [formData, setFormData] = useState({
     name: '',
     category: categories[0] || '',
@@ -26,26 +30,54 @@ export function AddItemForm({ onItemAdded, categories }: AddItemFormProps) {
     color: '',
     variant: ''
   });
-
   const [addToOption, setAddToOption] = useState<AddToOption>('collection');
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [newHasItem, setNewHasItem] = useState('');
   const [newMissingItem, setNewMissingItem] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim() || !formData.category || !formData.condition.trim() || !formData.acquisitionDate) {
+      const errorMessage = 'Please provide name, category, condition, and acquisition date.';
+      setErrorMessage(errorMessage);
+      notify(errorMessage, 'error');
+      return;
+    }
+
     const newItem: CollectionItem = {
       id: crypto.randomUUID(),
       ...formData,
       value: Number(formData.value) || 0,
       isWanted: addToOption === 'wanted'
     };
-    saveItem(newItem);
+
+    addItem(newItem);
+    notify(
+      addToOption === 'wanted'
+        ? 'Wanted item added successfully'
+        : 'Item added to collection successfully',
+      'success'
+    );
     onItemAdded();
   };
 
+  const imagePreviewUrl = useMemo(() => {
+    if (!formData.imageUrl) return '';
+    try {
+      return new URL(formData.imageUrl).toString();
+    } catch {
+      return '';
+    }
+  }, [formData.imageUrl]);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {errorMessage && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-100">
+          {errorMessage}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium text-dark-200 mb-2">Name</label>
@@ -85,14 +117,47 @@ export function AddItemForm({ onItemAdded, categories }: AddItemFormProps) {
           />
         </div>
 
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium text-dark-200 mb-2">Condition</label>
           <input
             type="text"
             value={formData.condition}
             onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+            placeholder="Use a reference or write a custom condition"
             className="w-full rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2"
           />
+          <div className="mt-4 rounded-2xl border border-dark-700 bg-dark-900 p-4">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-white">Condition reference</p>
+                <p className="text-sm text-dark-300">Click a reference to fill the field or type your own.</p>
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-dark-700">
+              <table className="min-w-full text-left text-sm text-dark-100">
+                <thead className="bg-dark-800 text-dark-300">
+                  <tr>
+                    <th className="px-3 py-2">Reference</th>
+                    <th className="px-3 py-2">Meaning</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {conditionOptions.map((option) => (
+                    <tr
+                      key={option.id}
+                      onClick={() => setFormData({ ...formData, condition: option.label })}
+                      className={`cursor-pointer border-t border-dark-700 transition-colors hover:bg-dark-800 ${
+                        formData.condition === option.label ? 'bg-indigo-500/10' : ''
+                      }`}
+                    >
+                      <td className="px-3 py-3 font-medium text-white">{option.label}</td>
+                      <td className="px-3 py-3 text-dark-200">{option.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -113,6 +178,11 @@ export function AddItemForm({ onItemAdded, categories }: AddItemFormProps) {
             onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
             className="w-full rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2"
           />
+          {imagePreviewUrl && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-dark-700 bg-dark-900">
+              <img src={imagePreviewUrl} alt="Preview" className="w-full h-40 object-cover" />
+            </div>
+          )}
         </div>
 
         <div>
