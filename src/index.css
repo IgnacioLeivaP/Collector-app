@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Color tokens ────────────────────────────────────────────── */
+:root {
+  /* dark mode (default) */
+  --c-50:  243 244 246;
+  --c-100: 229 231 235;
+  --c-200: 209 213 219;
+  --c-300: 156 163 175;
+  --c-400: 107 114 128;
+  --c-500: 75  85  99;
+  --c-600: 55  65  81;
+  --c-700: 31  41  55;
+  --c-800: 17  24  39;
+  --c-900: 3   7   18;
+}
+
+.theme-light {
+  /* light mode — escala invertida */
+  --c-50:  15  23  42;
+  --c-100: 30  41  59;
+  --c-200: 51  65  85;
+  --c-300: 71  85  105;
+  --c-400: 100 116 139;
+  --c-500: 148 163 184;
+  --c-600: 203 213 225;
+  --c-700: 226 232 240;
+  --c-800: 241 245 249;
+  --c-900: 248 250 252;
+}
+
+/* text-white es built-in de Tailwind, no usa nuestros tokens */
+.theme-light .text-white { color: rgb(15 23 42); }
+
+/* ── Logo font ───────────────────────────────────────────────── */
 .logo-font {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
@@ -11,14 +44,28 @@
   text-transform: uppercase;
 }
 
+/* ── Nav glow ────────────────────────────────────────────────── */
 .nav-glow {
   box-shadow:
     1px 0 24px rgba(99, 102, 241, 0.18),
     1px 0  8px rgba(99, 102, 241, 0.10);
 }
 
+.theme-light .nav-glow {
+  box-shadow:
+    1px 0 20px rgba(99, 102, 241, 0.12),
+    1px 0  6px rgba(99, 102, 241, 0.07);
+}
+
+/* ── Page gradient (background-image, no pisa background-color) ─ */
 .page-bg {
-  background:
+  background-image:
     radial-gradient(ellipse at 15% 0%,   rgba(99, 102, 241, 0.09) 0%, transparent 55%),
     radial-gradient(ellipse at 85% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+}
+
+.theme-light .page-bg {
+  background-image:
+    radial-gradient(ellipse at 15% 0%,   rgba(99, 102, 241, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
 }
