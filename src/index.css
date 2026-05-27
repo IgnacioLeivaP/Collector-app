@@ -10,3 +10,15 @@
   font-style: italic;
   text-transform: uppercase;
 }
+
+.nav-glow {
+  box-shadow:
+    1px 0 24px rgba(99, 102, 241, 0.18),
+    1px 0  8px rgba(99, 102, 241, 0.10);
+}
+
+.page-bg {
+  background:
+    radial-gradient(ellipse at 15% 0%,   rgba(99, 102, 241, 0.09) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 100%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+}
