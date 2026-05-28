@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, ExternalLink, Heart } from 'lucide-react';
+import { Trash2, Edit, ExternalLink } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
+import { deleteItem } from '../utils/storage';
 import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '../utils/settings';
 
 interface WantedListProps {
   items: CollectionItem[];
-  onDeleteItem: (id: string) => void;
+  onItemDeleted: () => void;
   onEditItem: (item: CollectionItem) => void;
-  onToggleWanted: (id: string) => void;
 }
 
-export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps) {
+export function WantedList({ items, onItemDeleted, onEditItem }: WantedListProps) {
   const navigate = useNavigate();
   const [itemToDelete, setItemToDelete] = useState<CollectionItem | null>(null);
 
   const handleDelete = (id: string) => {
-    onDeleteItem(id);
+    deleteItem(id);
+    onItemDeleted();
     setItemToDelete(null);
   };
 
@@ -25,10 +27,10 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
         {items.map((item) => (
           <div
             key={item.id}
-            className="bg-dark-800 rounded-xl border border-dark-700 overflow-hidden hover:border-dark-600 transition-colors"
+            className="glass-card rounded-xl overflow-hidden hover:border-indigo-500/50 transition-colors"
           >
-            <div className="flex">
-              <div className="w-48 h-48 flex-shrink-0">
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-48 h-48">
                 {item.imageUrl ? (
                   <img
                     src={item.imageUrl}
@@ -42,8 +44,8 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
                 )}
               </div>
 
-              <div className="flex-1 p-6">
-                <div className="flex justify-between">
+              <div className="flex-1 p-4 md:p-6">
+                <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-2">
                       {item.name}
@@ -64,23 +66,13 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
                       onClick={() => onEditItem(item)}
                       className="p-2 rounded-lg text-dark-300 hover:text-white transition-colors"
                       title="Edit Item"
-                      type="button"
                     >
                       <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => onToggleWanted(item.id)}
-                      className="p-2 rounded-lg text-dark-300 hover:text-pink-400 transition-colors"
-                      title="Move to Collection"
-                      type="button"
-                    >
-                      <Heart className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => setItemToDelete(item)}
                       className="p-2 rounded-lg text-dark-300 hover:text-red-400 transition-colors"
                       title="Delete Item"
-                      type="button"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -89,14 +81,14 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
 
                 <p className="text-dark-300 mb-4 line-clamp-2">{item.description}</p>
 
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 text-sm">
                   <div>
                     <span className="text-dark-300">Condition:</span>{" "}
                     <span className="text-white">{item.condition}</span>
                   </div>
                   <div>
                     <span className="text-dark-300">Expected Value:</span>{" "}
-                    <span className="text-white">${item.value.toFixed(2)}</span>
+                    <span className="text-white">{formatCurrency(item.value)}</span>
                   </div>
                   {item.variant && (
                     <div>
@@ -113,7 +105,7 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
 
       {itemToDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-dark-800 p-6 rounded-xl max-w-md w-full mx-4">
+          <div className="glass-card p-6 rounded-xl max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-white mb-2">Delete Item</h3>
             <p className="text-dark-300 mb-4">
               Are you sure you want to delete "{itemToDelete.name}" from your wanted list?
@@ -137,4 +129,4 @@ export function WantedList({ items, onDeleteItem, onEditItem }: WantedListProps)
       )}
     </>
   );
-} 
+}

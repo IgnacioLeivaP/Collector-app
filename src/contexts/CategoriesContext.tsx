@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { useItems } from '../hooks/useItems';
+import { useItemsContext } from './ItemsContext';
 import { loadCategories, saveCategory } from '../utils/storage';
 
 type CategoriesContextType = {
@@ -10,7 +10,7 @@ type CategoriesContextType = {
 const CategoriesContext = createContext<CategoriesContextType | undefined>(undefined);
 
 export const CategoriesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { items } = useItems();
+  const { items } = useItemsContext();
   const [storedCategories, setStoredCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -18,17 +18,15 @@ export const CategoriesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, []);
 
   const categories = useMemo(() => {
-    const categoriesFromItems = items
-      .map((item) => item.category)
-      .filter(Boolean);
-    return Array.from(new Set([...storedCategories, ...categoriesFromItems])).sort();
+    const fromItems = items.map((i) => i.category).filter(Boolean);
+    return Array.from(new Set([...storedCategories, ...fromItems])).sort();
   }, [items, storedCategories]);
 
   const addCategory = (category: string) => {
     const normalized = category.trim();
     if (!normalized) return;
-    const updatedCategories = saveCategory(normalized);
-    setStoredCategories(updatedCategories);
+    const updated = saveCategory(normalized);
+    setStoredCategories(updated);
   };
 
   return (
@@ -40,8 +38,6 @@ export const CategoriesProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
 export function useCategoriesContext() {
   const context = useContext(CategoriesContext);
-  if (!context) {
-    throw new Error('useCategoriesContext must be used within a CategoriesProvider');
-  }
+  if (!context) throw new Error('useCategoriesContext must be used within CategoriesProvider');
   return context;
 }

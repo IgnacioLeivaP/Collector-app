@@ -1,199 +1,207 @@
-import React from 'react';
-import { Sliders } from 'lucide-react';
-import { useNotifications } from '../contexts/NotificationsContext';
+import React, { useRef } from 'react';
+import { Settings, Download, Upload, Coffee, MessageCircle, Sun, Moon, Trash2 } from 'lucide-react';
 import { useSettings } from '../contexts/SettingsContext';
-import { sortOptions } from '../constants/sortOptions';
+import { useNotifications } from '../contexts/NotificationsContext';
+import { exportCollection, importCollection } from '../utils/storage';
 
 export function SettingsPage() {
-  const { settings, toggleTheme, setDefaultSort, setSectionVisibility, clearAppData } = useSettings();
+  const { settings, updateSettings, toggleTheme, clearAppData } = useSettings();
   const { notify } = useNotifications();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const exportData = () => {
-    const payload = {
-      collection_items: JSON.parse(localStorage.getItem('collection_items') ?? '[]'),
-      collection_categories: JSON.parse(localStorage.getItem('collection_categories') ?? '[]'),
-      app_settings: JSON.parse(localStorage.getItem('app_settings') ?? '{}'),
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'collector-app-export.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    notify('Data exported successfully', 'success');
-  };
-
-  const applyImportedData = (payload: unknown) => {
-    if (typeof payload !== 'object' || payload === null) {
-      throw new Error('Import file must be a JSON object');
-    }
-
-    const imported = payload as Record<string, unknown>;
-
-    if ('collection_items' in imported) {
-      localStorage.setItem('collection_items', JSON.stringify(imported.collection_items));
-    }
-    if ('collection_categories' in imported) {
-      localStorage.setItem('collection_categories', JSON.stringify(imported.collection_categories));
-    }
-    if ('app_settings' in imported) {
-      localStorage.setItem('app_settings', JSON.stringify(imported.app_settings));
-    }
-
-    notify('Data imported successfully. Reloading...', 'success');
-    setTimeout(() => window.location.reload(), 300);
-  };
-
-  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
-    try {
-      const rawText = await file.text();
-      const payload = JSON.parse(rawText);
-      applyImportedData(payload);
-    } catch {
-      notify('Unable to import file. Make sure it is valid JSON.', 'error');
-    }
+    const result = await importCollection(file);
+    notify(result.message, result.success ? 'success' : 'error');
+    if (result.success) window.location.reload();
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleClear = () => {
-    if (
-      window.confirm(
-        'This will remove all items, categories and settings. Do you want to continue?'
-      )
-    ) {
-      clearAppData();
-      notify('All application data has been cleared', 'success');
-    }
-  };
+  const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
+    <button
+      onClick={onChange}
+      className={`w-12 h-6 rounded-full transition-colors relative ${value ? 'bg-indigo-500' : 'bg-dark-700'}`}
+    >
+      <span className={`absolute top-1 left-1 w-4 h-4 rounded-full transition-transform bg-white ${value ? 'translate-x-6' : ''}`} />
+    </button>
+  );
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center gap-3 mb-8">
+        <Settings className="w-8 h-8 text-indigo-400" />
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
-            <Sliders className="w-6 h-6" />
-            Settings
-          </h2>
-          <p className="text-dark-400 text-sm max-w-2xl">
-            Configure theme, default sort order and which sections are visible in the app.
-          </p>
+          <h2 className="text-2xl font-bold text-white">Settings</h2>
+          <p className="text-dark-300 text-sm">Customize your experience</p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Theme</h3>
-          <p className="text-dark-300 mb-4">Switch between dark and light appearance.</p>
-          <button
-            type="button"
-            onClick={() => {
-              toggleTheme();
-              notify(`Theme switched to ${settings.theme === 'dark' ? 'light' : 'dark'}`, 'success');
-            }}
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 transition-colors"
-          >
-            Use {settings.theme === 'dark' ? 'Light' : 'Dark'} Mode
-          </button>
-        </div>
-
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Default sort</h3>
-          <p className="text-dark-300 mb-4">Choose how items are ordered when you open a list.</p>
-          <select
-            value={settings.defaultSort}
-            onChange={(event) => setDefaultSort(event.target.value)}
-            className="w-full rounded-lg bg-dark-900 border border-dark-700 px-4 py-2 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Visible sections</h3>
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 text-dark-200">
-            <input
-              type="checkbox"
-              checked={settings.showCollection}
-              onChange={(event) => setSectionVisibility('showCollection', event.target.checked)}
-              className="h-4 w-4 rounded border-dark-600 bg-dark-900 text-indigo-500 focus:ring-indigo-500"
-            />
-            Show Collection section
-          </label>
-          <label className="flex items-center gap-3 text-dark-200">
-            <input
-              type="checkbox"
-              checked={settings.showShelf}
-              onChange={(event) => setSectionVisibility('showShelf', event.target.checked)}
-              className="h-4 w-4 rounded border-dark-600 bg-dark-900 text-indigo-500 focus:ring-indigo-500"
-            />
-            Show Shelf section
-          </label>
-          <label className="flex items-center gap-3 text-dark-200">
-            <input
-              type="checkbox"
-              checked={settings.showWanted}
-              onChange={(event) => setSectionVisibility('showWanted', event.target.checked)}
-              className="h-4 w-4 rounded border-dark-600 bg-dark-900 text-indigo-500 focus:ring-indigo-500"
-            />
-            Show Wanted section
-          </label>
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Import data</h3>
-          <p className="text-dark-300 mb-4">Upload a JSON export to restore app state.</p>
-          <label className="block text-sm font-medium text-dark-200 mb-2">JSON file import</label>
-          <input
-            type="file"
-            accept="application/json"
-            onChange={handleImportFile}
-            className="w-full rounded-lg bg-dark-900 border border-dark-700 text-white px-4 py-2"
-          />
-        </div>
-
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Export data</h3>
-          <p className="text-dark-300 mb-4">
-            Download your current cards, categories, and settings in a JSON file that can be re-imported later.
-          </p>
-          <button
-            type="button"
-            onClick={exportData}
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-500 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-600 transition-colors"
-          >
-            Export JSON
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-white">Clear stored data</h3>
-            <p className="text-dark-300 text-sm">
-              Remove all saved items, categories and settings from local storage.
-            </p>
+      {/* Appearance */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Appearance</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {settings.theme === 'dark' ? (
+              <Moon className="w-5 h-5 text-indigo-400" />
+            ) : (
+              <Sun className="w-5 h-5 text-yellow-400" />
+            )}
+            <label className="text-dark-100">
+              {settings.theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+            </label>
           </div>
+          <Toggle value={settings.theme === 'light'} onChange={toggleTheme} />
+        </div>
+      </div>
+
+      {/* Navigation Settings */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Navigation</h3>
+        <div className="space-y-4">
+          {[
+            { key: 'showShelf', label: 'Show Shelf Tab' },
+            { key: 'showSelling', label: 'Show Selling Tab' },
+            { key: 'showWanted', label: 'Show Wanted Tab' },
+          ].map(({ key, label }) => (
+            <div key={key} className="flex items-center justify-between">
+              <label className="text-dark-100">{label}</label>
+              <Toggle
+                value={settings[key as keyof typeof settings] as boolean}
+                onChange={() => updateSettings({ [key]: !settings[key as keyof typeof settings] })}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Currency Settings */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Currency Format</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-dark-100 block mb-2">Currency Symbol</label>
+            <select
+              value={settings.currencySymbol}
+              onChange={(e) => updateSettings({ currencySymbol: e.target.value })}
+              className="w-full rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2"
+            >
+              <option value="$">$ (Dollar)</option>
+              <option value="€">€ (Euro)</option>
+              <option value="£">£ (Pound)</option>
+              <option value="¥">¥ (Yen)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-dark-100 block mb-2">Thousands Separator</label>
+            <select
+              value={settings.thousandsSeparator}
+              onChange={(e) => updateSettings({ thousandsSeparator: e.target.value as '.' | ',' })}
+              className="w-full rounded-lg bg-dark-900 border-dark-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors px-4 py-2"
+            >
+              <option value=",">Comma (1,234.56)</option>
+              <option value=".">Point (1.234,56)</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="text-dark-100">Show Cents</label>
+            <Toggle
+              value={settings.showCents}
+              onChange={() => updateSettings({ showCents: !settings.showCents })}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Shelf Display Settings */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Shelf Display</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-dark-100">Show Item Values</label>
+            <Toggle
+              value={settings.showShelfItemValues}
+              onChange={() => updateSettings({ showShelfItemValues: !settings.showShelfItemValues })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="text-dark-100">Show Total Value</label>
+            <Toggle
+              value={settings.showShelfTotalValue}
+              onChange={() => updateSettings({ showShelfTotalValue: !settings.showShelfTotalValue })}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Import/Export */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Data Management</h3>
+        <div className="space-y-4">
           <button
-            type="button"
-            onClick={handleClear}
-            className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 transition-colors"
+            onClick={() => { exportCollection(); notify('Collection exported', 'success'); }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
           >
-            Clear all data
+            <Download className="w-5 h-5" />
+            Export Collection
           </button>
+
+          <label className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors cursor-pointer">
+            <Upload className="w-5 h-5" />
+            Import Collection
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImport}
+              className="hidden"
+            />
+          </label>
+
+          <button
+            onClick={() => {
+              if (window.confirm('Delete ALL data? This cannot be undone.')) {
+                clearAppData();
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors"
+          >
+            <Trash2 className="w-5 h-5" />
+            Clear All Data
+          </button>
+        </div>
+      </div>
+
+      {/* Support */}
+      <div className="glass-card rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-4">Support</h3>
+        <div className="space-y-4">
+          <a
+            href="https://buymeacoffee.com/nispero"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 p-3 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+          >
+            <Coffee className="w-5 h-5 text-yellow-500" />
+            <div>
+              <h4 className="text-white font-medium">Buy me a coffee</h4>
+              <p className="text-dark-300 text-sm">Support the development</p>
+            </div>
+          </a>
+
+          <a
+            href="mailto:ignacio.leiva06@gmail.com"
+            className="flex items-center gap-3 p-3 bg-dark-700 rounded-lg hover:bg-dark-600 transition-colors"
+          >
+            <MessageCircle className="w-5 h-5 text-indigo-400" />
+            <div>
+              <h4 className="text-white font-medium">Send Feedback</h4>
+              <p className="text-dark-300 text-sm">ignacio.leiva06@gmail.com</p>
+            </div>
+          </a>
         </div>
       </div>
     </div>

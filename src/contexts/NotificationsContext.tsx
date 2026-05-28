@@ -21,7 +21,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     const id = crypto.randomUUID();
     setNotifications((current) => [...current, { id, type, message }]);
     window.setTimeout(() => {
-      setNotifications((current) => current.filter((notification) => notification.id !== id));
+      setNotifications((current) => current.filter((n) => n.id !== id));
     }, 4000);
   };
 
@@ -34,12 +34,12 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         {notifications.map((note) => (
           <div
             key={note.id}
-            className={`rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-xl transition-all duration-300 ${
+            className={`rounded-xl border px-4 py-3 shadow-xl backdrop-blur-xl transition-all duration-300 ${
               note.type === 'success'
-                ? 'bg-emerald-500/95 border-emerald-300 text-slate-950'
+                ? 'bg-emerald-500/90 border-emerald-400 text-white'
                 : note.type === 'error'
-                ? 'bg-rose-500/95 border-rose-300 text-slate-950'
-                : 'bg-slate-900/95 border-slate-600 text-white'
+                ? 'bg-rose-500/90 border-rose-400 text-white'
+                : 'glass-card text-white'
             }`}
           >
             <p className="text-sm font-medium">{note.message}</p>
@@ -52,8 +52,6 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export function useNotifications() {
   const context = useContext(NotificationsContext);
-  if (!context) {
-    throw new Error('useNotifications must be used within a NotificationsProvider');
-  }
+  if (!context) throw new Error('useNotifications must be used within NotificationsProvider');
   return context;
 }

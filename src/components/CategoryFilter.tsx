@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCategoriesContext } from '../contexts/CategoriesContext';
+import { useItems } from '../hooks/useItems';
 
 interface CategoryFilterProps {
   selectedCategory: string | null;
@@ -7,7 +7,12 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
-  const { categories } = useCategoriesContext();
+  const { items } = useItems();
+  
+  // Obtener categorías únicas de los items
+  const categories = Array.from(new Set(items.map(item => item.category)))
+    .filter(Boolean) // Eliminar categorías vacías
+    .sort();
 
   return (
     <div className="relative">

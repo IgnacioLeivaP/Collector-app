@@ -1,29 +1,34 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, Star, MoreVertical, Heart } from 'lucide-react';
+import { Trash2, Edit, Star, MoreVertical } from 'lucide-react';
 import { CollectionItem } from '../types/collection';
+import { deleteItem, toggleShelfItem } from '../utils/storage';
 import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '../utils/settings';
 
 interface CollectionGridProps {
   items: CollectionItem[];
-  onDeleteItem: (id: string) => void;
+  onItemDeleted: () => void;
   onEditItem: (item: CollectionItem) => void;
-  onToggleShelf: (id: string) => void;
-  onToggleWanted: (id: string) => void;
+  onShelfToggle: () => void;
 }
 
-export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf }: CollectionGridProps) {
+export function CollectionGrid({ items, onItemDeleted, onEditItem, onShelfToggle }: CollectionGridProps) {
   const navigate = useNavigate();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<CollectionItem | null>(null);
 
   const handleDelete = (id: string) => {
-    onDeleteItem(id);
+    deleteItem(id);
+    onItemDeleted();
     setItemToDelete(null);
   };
 
   const handleShelfToggle = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleShelf(id);
+    const success = toggleShelfItem(id);
+    if (success) {
+      onShelfToggle();
+    }
   };
 
   const handleMenuClick = (e: React.MouseEvent, itemId: string) => {
@@ -33,11 +38,11 @@ export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf 
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {items.map((item) => (
           <div 
             key={item.id} 
-            className="bg-dark-800 rounded-xl shadow-xl overflow-hidden border border-dark-700 backdrop-blur-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 cursor-pointer"
+            className="glass-card rounded-xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 cursor-pointer"
             onClick={() => navigate(`/item/${item.id}`)}
           >
             {item.imageUrl && (
@@ -50,35 +55,23 @@ export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf 
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900/80 to-transparent" />
               </div>
             )}
-            <div className="p-4">
+            <div className="p-3 md:p-4">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{item.name}</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-white">{item.name}</h3>
                   <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-300 mt-1 backdrop-blur-sm">
                     {item.category}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2">
                   <button
                     onClick={(e) => handleShelfToggle(item.id, e)}
                     className={`text-dark-300 hover:text-yellow-400 transition-colors ${
                       item.isShelfItem ? 'text-yellow-400' : ''
                     }`}
                     title={item.isShelfItem ? "Remove from Shelf" : "Add to Shelf"}
-                    type="button"
                   >
                     <Star className="w-5 h-5" fill={item.isShelfItem ? "currentColor" : "none"} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleWanted(item.id);
-                    }}
-                    className="text-dark-300 hover:text-pink-400 transition-colors"
-                    title="Move to Wanted"
-                    type="button"
-                  >
-                    <Heart className="w-5 h-5" />
                   </button>
                   <div className="relative">
                     <button
@@ -121,13 +114,13 @@ export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf 
                   </div>
                 </div>
               </div>
-              <p className="mt-2 text-dark-300 text-sm">{item.description}</p>
-              <div className="mt-4 space-y-1">
+              <p className="mt-2 text-dark-300 text-sm line-clamp-2">{item.description}</p>
+              <div className="mt-3 space-y-1">
                 <p className="text-sm text-dark-200">
                   <span className="font-medium text-dark-100">Condition:</span> {item.condition}
                 </p>
                 <p className="text-sm text-dark-200">
-                  <span className="font-medium text-dark-100">Value:</span> ${item.value.toFixed(2)}
+                  <span className="font-medium text-dark-100">Value:</span> {formatCurrency(item.value)}
                 </p>
                 <p className="text-sm text-dark-200">
                   <span className="font-medium text-dark-100">Acquired:</span> {item.acquisitionDate}
@@ -138,10 +131,9 @@ export function CollectionGrid({ items, onDeleteItem, onEditItem, onToggleShelf 
         ))}
       </div>
 
-      {/* Modal de confirmación de borrado */}
       {itemToDelete && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-dark-800 p-6 rounded-xl max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="glass-card p-6 rounded-xl max-w-md w-full">
             <h3 className="text-lg font-semibold text-white mb-2">Delete Item</h3>
             <p className="text-dark-300 mb-4">
               Are you sure you want to delete "{itemToDelete.name}"? This action cannot be undone.

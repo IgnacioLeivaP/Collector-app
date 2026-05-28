@@ -1,11 +1,15 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
+import { formatCurrency, loadSettings } from '../utils/settings';
 
 export function ShelfPage() {
   const { items } = useItems();
+  const settings = loadSettings();
   const shelfItems = items.filter(item => item.isShelfItem);
   const emptySlots = Array(24 - shelfItems.length).fill(null);
+  
+  const totalValue = shelfItems.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <div>
@@ -16,6 +20,13 @@ export function ShelfPage() {
           <p className="text-dark-300 text-sm">Display the items you're most proud of</p>
         </div>
       </div>
+
+      {settings.showShelfTotalValue && (
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-xl mb-6">
+          <p className="text-white text-lg font-medium">Total Shelf Value:</p>
+          <p className="text-white text-3xl font-bold">{formatCurrency(totalValue)}</p>
+        </div>
+      )}
 
       <div className="bg-dark-800 p-6 rounded-xl border border-dark-700">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -38,13 +49,15 @@ export function ShelfPage() {
                 </div>
               )}
               <div className="p-4">
-                <div className="flex justify-between items-center">
+                <div className={`flex ${settings.showShelfItemValues ? 'justify-between' : 'justify-center'} items-center`}>
                   <h3 className="text-white font-medium truncate uppercase text-sm">
                     {item.name}
                   </h3>
-                  <p className="text-indigo-400 text-xs ml-2">
-                    ${item.value.toFixed(2)}
-                  </p>
+                  {settings.showShelfItemValues && (
+                    <p className="text-indigo-400 text-xs ml-2">
+                      {formatCurrency(item.value, true)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -62,4 +75,4 @@ export function ShelfPage() {
       </div>
     </div>
   );
-} 
+}
